@@ -1,0 +1,53 @@
+# Build directories
+build/
+cmake-build-*/
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+mdgw
+mdgw_tests
+
+# Object files
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+/tmp/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Dependency management
+third_party/
+_deps/
+
+# Test outputs
+Testing/
+CTestTestfile.cmake
+
+# Temporary files
+*.tmp
+*.temp
