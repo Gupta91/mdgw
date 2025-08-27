@@ -68,8 +68,12 @@ target_compile_options(mdgw PRIVATE
   -Wall -Wextra -Wpedantic -Wconversion -Wno-sign-conversion
 )
 
-# Use Boost.System header-only to avoid linking libboost_system
-target_compile_definitions(mdgw PRIVATE BOOST_ERROR_CODE_HEADER_ONLY)
+# Boost configuration: Use header-only libraries to avoid linking
+# Boost.Beast and Boost.ASIO are header-only when configured properly
+target_compile_definitions(mdgw PRIVATE 
+  BOOST_ERROR_CODE_HEADER_ONLY
+  BOOST_SYSTEM_NO_DEPRECATED
+)
 
 
 # -------------------------

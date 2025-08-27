@@ -12,35 +12,111 @@ An extensible C++20 market-data gateway with a generic base interface and an OKX
 - Auto-reconnect and graceful shutdown (Ctrl-C)
 
 ### Build (macOS/Linux)
-Prereqs:
-- CMake >= 3.20
-- A C++20 compiler (Clang 14+/GCC 11+)
-- Boost (headers + system)
-- OpenSSL
 
-macOS (Homebrew):
+#### Prerequisites:
+- **CMake >= 3.20**
+- **C++20 compiler** (Clang 14+/GCC 11+/MSVC 19.29+)
+- **Boost >= 1.75** (Beast, ASIO, System) 
+- **OpenSSL >= 1.1.1** (TLS/SSL support)
+- **zlib** (CRC32 checksum validation)
+
+#### Install Dependencies:
+
+**macOS (Homebrew):**
 ```bash
-brew install cmake boost openssl@3
+brew install cmake boost openssl@3 zlib
 ```
 
-Ubuntu/Debian:
+**Ubuntu/Debian:**
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev
+sudo apt-get install -y build-essential cmake \
+  libboost-all-dev libssl-dev zlib1g-dev
 ```
 
-Configure and build:
+**CentOS/RHEL/Fedora:**
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+# CentOS/RHEL 8+
+sudo dnf install gcc-c++ cmake boost-devel openssl-devel zlib-devel
+
+# Fedora
+sudo dnf install gcc-c++ cmake boost-devel openssl-devel zlib-devel
+```
+
+**Build from Source (if needed):**
+```bash
+# If system packages are too old, these dependencies auto-download:
+# - spdlog (logging) - downloaded via CMake FetchContent
+# - rapidjson (JSON parsing) - downloaded via CMake FetchContent  
+# - Catch2 (testing) - downloaded via CMake FetchContent
+```
+
+#### Build Steps:
+
+1. **Clone and configure:**
+```bash
+git clone https://github.com/Gupta91/mdgw.git
+cd mdgw
+```
+
+2. **Configure CMake:**
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+```
+
+3. **Build:**
+```bash
 cmake --build build -j
 ```
 
-### Run
+4. **Run tests (optional):**
+```bash
+./build/mdgw_tests
+```
+
+5. **Run application:**
 ```bash
 ./build/mdgw
 ```
-The program connects to OKX public WS, subscribes to `books` (full depth) for `BTC-USDT-SWAP` and `ETH-USDT-SWAP`,
-prints best bid/ask on change, logs updates/sec every 5s, and average tick-to-book latency every 60s.
+
+### Testing
+
+Run the comprehensive test suite:
+```bash
+# Run all tests
+./build/mdgw_tests
+
+# Run specific test categories
+./build/mdgw_tests "[orderbook]"    # OrderBook functionality
+./build/mdgw_tests "[ringbuffer]"   # Lock-free ring buffer
+```
+
+The test suite includes:
+- **OrderBook correctness**: Snapshot/incremental updates, best bid/ask extraction
+- **Ring buffer performance**: Lock-free SPSC operations, multi-threaded stress testing (10K items)  
+- **Thread safety**: Concurrent producer/consumer validation
+
+### Troubleshooting
+
+**Build fails with missing Boost:**
+```bash
+# macOS: Update Homebrew and install latest Boost
+brew update && brew install boost
+
+# Ubuntu: Install development headers
+sudo apt-get install libboost-dev libboost-system-dev
+```
+
+**CMake can't find OpenSSL on macOS:**
+```bash
+export OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+```
+
+**CMake policy warning about RapidJSON:**
+The `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` flag handles compatibility with RapidJSON's older CMake requirements. This is normal and can be ignored.
+
+### Run
 
 #### Monitoring & Logs
 The application outputs real-time market data and metrics. To monitor:
