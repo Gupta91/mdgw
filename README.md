@@ -6,7 +6,7 @@ An extensible C++20 market-data gateway with a generic base interface and an OKX
 ### Features
 - MarketDataGateway base interface and OkxMarketDataGateway implementation
 - OrderBook with price-level aggregation (bids/asks)
-- Connects to OKX public WS and subscribes to `books5` for BTC/ETH swaps
+- Connects to OKX public WS and subscribes to `books` (full depth) for BTC/ETH swaps
 - Applies snapshot then incremental updates
 - Prints best bid/ask on change; logs updates/sec and avg tick-to-book latency
 - Auto-reconnect and graceful shutdown (Ctrl-C)
