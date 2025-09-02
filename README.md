@@ -82,6 +82,11 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.
 cmake --build build -j
 ```
 
+Low-memory environments (VMs/containers): If the build is killed (cc1plus terminated), reduce parallelism:
+```bash
+cmake --build build -j1
+```
+
 4. **Run tests (optional):**
 ```bash
 ./build/mdgw_tests
