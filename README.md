@@ -126,12 +126,12 @@ brew update && brew install boost
 
 # 2) Reconfigure CMake with Homebrew paths so headers are on include path
 rm -rf build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DCMAKE_PREFIX_PATH="$(brew --prefix);$(brew --prefix boost)" \
   -DBOOST_ROOT="$(brew --prefix boost)"
 
 # If you also installed OpenSSL via Homebrew, include its path explicitly
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DCMAKE_PREFIX_PATH="$(brew --prefix);$(brew --prefix boost);$(brew --prefix openssl@3)" \
   -DBOOST_ROOT="$(brew --prefix boost)" \
   -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"
