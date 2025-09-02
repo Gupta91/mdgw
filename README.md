@@ -27,6 +27,19 @@ An extensible C++20 market-data gateway with a generic base interface and an OKX
 brew install cmake boost openssl@3 zlib
 ```
 
+macOS notes (Homebrew paths):
+
+```bash
+# Fresh configure with explicit Homebrew paths so CMake finds Boost/OpenSSL/zlib
+rm -rf build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$(brew --prefix);$(brew --prefix boost);$(brew --prefix openssl@3);$(brew --prefix zlib)" \
+  -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"
+
+# Build
+cmake --build build -j
+```
+
 **Ubuntu/Debian:**
 ```bash
 sudo apt-get update
@@ -100,11 +113,29 @@ The test suite includes:
 
 **Build fails with missing Boost:**
 ```bash
-# macOS: Update Homebrew and install latest Boost
+# Symptom (macOS/Clang):
+# fatal error: 'boost/asio.hpp' file not found
+
+# 1) Install Boost
 brew update && brew install boost
 
-# Ubuntu: Install development headers
-sudo apt-get install libboost-dev libboost-system-dev
+# 2) Reconfigure CMake with Homebrew paths so headers are on include path
+rm -rf build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$(brew --prefix);$(brew --prefix boost)" \
+  -DBOOST_ROOT="$(brew --prefix boost)"
+
+# If you also installed OpenSSL via Homebrew, include its path explicitly
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$(brew --prefix);$(brew --prefix boost);$(brew --prefix openssl@3)" \
+  -DBOOST_ROOT="$(brew --prefix boost)" \
+  -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"
+
+# 3) Build
+cmake --build build -j
+
+# Ubuntu/Debian: Install development headers (usually sufficient without extra flags)
+sudo apt-get install -y libboost-dev libboost-system-dev
 ```
 
 **CMake can't find OpenSSL on macOS:**
