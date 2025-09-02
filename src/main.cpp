@@ -23,8 +23,6 @@ int main() {
   MetricsRegistry metrics;
   metrics.registerInstrument("BTC-USDT-SWAP");
   metrics.registerInstrument("ETH-USDT-SWAP");
-  MetricsReporter reporter(metrics);
-  reporter.start();
 
   OkxMarketDataGateway gw;
   gw.setInstruments({"BTC-USDT-SWAP", "ETH-USDT-SWAP"});
@@ -46,7 +44,16 @@ int main() {
     }
   });
 
+  // Start the gateway first
+  spdlog::debug("Starting OKX Market Data Gateway...");
   gw.start();
+  
+  // Wait a moment for initial connection attempt
+  std::this_thread::sleep_for(std::chrono::seconds(3));
+  
+  // Now start the metrics reporter
+  MetricsReporter reporter(metrics);
+  reporter.start();
 
   while (g_running.load()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(200));

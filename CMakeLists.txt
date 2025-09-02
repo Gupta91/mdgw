@@ -16,6 +16,7 @@ include(FetchContent)
 # Dependencies
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(Boost REQUIRED)
 
 FetchContent_Declare(
   spdlog
@@ -50,6 +51,7 @@ add_executable(mdgw
 
 target_include_directories(mdgw PRIVATE
   ${rapidjson_SOURCE_DIR}/include
+  ${Boost_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
@@ -73,6 +75,7 @@ target_compile_options(mdgw PRIVATE
 target_compile_definitions(mdgw PRIVATE 
   BOOST_ERROR_CODE_HEADER_ONLY
   BOOST_SYSTEM_NO_DEPRECATED
+  SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_INFO
 )
 
 

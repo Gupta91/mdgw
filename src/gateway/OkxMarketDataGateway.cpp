@@ -130,21 +130,28 @@ bool OkxMarketDataGateway::connectAndSubscribe() {
   using namespace boost;
   system::error_code ec;
 
+  
+  
   tcp::resolver resolver{ioc_};
+  
   auto const results = resolver.resolve(kHost, kPort, ec);
   if (ec) {
     spdlog::error("resolve error: {}", ec.message());
     return false;
   }
+  
 
   auto socket = std::make_unique<beast::ssl_stream<tcp::socket>>(ioc_, ssl_);
+  
   asio::connect(socket->next_layer(), results, ec);
   if (ec) {
     spdlog::error("connect error: {}", ec.message());
     return false;
   }
+  
 
   // Enable SNI (Server Name Indication) for TLS
+  
   if (!SSL_set_tlsext_host_name(socket->native_handle(), kHost)) {
     spdlog::error("failed to set SNI host name");
     return false;
@@ -155,6 +162,7 @@ bool OkxMarketDataGateway::connectAndSubscribe() {
     spdlog::error("tls handshake error: {}", ec.message());
     return false;
   }
+  
 
   ws_ = std::make_unique<beast::websocket::stream<beast::ssl_stream<tcp::socket>>>(std::move(*socket));
   ws_->set_option(beast::websocket::stream_base::timeout::suggested(beast::role_type::client));
@@ -163,13 +171,16 @@ bool OkxMarketDataGateway::connectAndSubscribe() {
         req.set(beast::http::field::user_agent, std::string{"mdgw/0.1"});
       }));
 
+  
   ws_->handshake(kHost, kPath, ec);
   if (ec) {
     spdlog::error("ws handshake error: {}", ec.message());
     return false;
   }
+  
 
   // Subscribe to books (full depth) for instruments
+  
   rapidjson::Document sub;
   sub.SetObject();
   auto& alloc = sub.GetAllocator();
@@ -192,6 +203,7 @@ bool OkxMarketDataGateway::connectAndSubscribe() {
     spdlog::error("ws write subscribe error: {}", ec.message());
     return false;
   }
+  
 
   return true;
 }
@@ -211,24 +223,41 @@ bool OkxMarketDataGateway::readOnceAndProcess() {
 
   rapidjson::Document d;
   d.Parse(data.c_str());
-  if (!d.IsObject()) return true;
-  if (!d.HasMember("arg")) return true;  // ignore events
+  if (!d.IsObject()) {
+    return true;
+  }
+  if (!d.HasMember("arg")) {
+    return true;  // ignore events
+  }
   const auto& arg = d["arg"];
-  if (!arg.HasMember("channel")) return true;
-  if (std::string(arg["channel"].GetString()) != "books") return true;
-  if (!d.HasMember("data")) return true;
+  if (!arg.HasMember("channel")) {
+    return true;
+  }
+  if (std::string(arg["channel"].GetString()) != "books") {
+    return true;
+  }
+  if (!d.HasMember("data")) {
+    return true;
+  }
+  
 
   const auto& dataArr = d["data"];
-  if (!dataArr.IsArray() || dataArr.Empty()) return true;
+  if (!dataArr.IsArray() || dataArr.Empty()) {
+    return true;
+  }
   const auto& book = dataArr[0];
-  if (!book.HasMember("instId")) return true;
-  std::string instId = book["instId"].GetString();
+  
+  // Get instrument ID from arg, not from book data
+  std::string instId = arg["instId"].GetString();
+  
   
   // Check if this is a snapshot (action="snapshot") or incremental update (action="update")
+  // The action is at the root level, not in the book data
   bool isSnapshot = false;
-  if (book.HasMember("action") && book["action"].IsString()) {
-    std::string action = book["action"].GetString();
+  if (d.HasMember("action") && d["action"].IsString()) {
+    std::string action = d["action"].GetString();
     isSnapshot = (action == "snapshot");
+    
   }
 
   std::vector<std::pair<double,double>> bids;
@@ -270,6 +299,7 @@ bool OkxMarketDataGateway::readOnceAndProcess() {
   }
 
   // Push to ring buffer (non-blocking I/O thread)
+  
   if (!ringBuffer_.tryEmplace(std::move(instId), std::move(bids), std::move(asks), recvNs, isSnapshot, std::move(receivedChecksum))) {
     spdlog::warn("Ring buffer full, dropping update for {}", instId);
     // In production, consider expanding buffer or applying backpressure
@@ -279,8 +309,12 @@ bool OkxMarketDataGateway::readOnceAndProcess() {
 }
 
 void OkxMarketDataGateway::processBookUpdate(const gateway::BookUpdate& update) {
+  
   auto it = books_.find(update.instrumentId);
-  if (it == books_.end()) return;
+  if (it == books_.end()) {
+    spdlog::warn("No order book found for instrument: {}", update.instrumentId);
+    return;
+  }
   auto& ob = it->second;
 
   if (update.isSnapshot) {
@@ -304,7 +338,13 @@ void OkxMarketDataGateway::processBookUpdate(const gateway::BookUpdate& update) 
   auto [bap, bas] = ob.bestAsk();
 
   BestQuote q{update.instrumentId, bbp, bbs, bap, bas, timeutil::nowSteadyNanos() - update.receiveTimeNs};
-  if (bestQuoteCallback_) bestQuoteCallback_(q);
+  
+  if (bestQuoteCallback_) {
+    bestQuoteCallback_(q);
+    
+  } else {
+    spdlog::warn("No callback set!");
+  }
 }
 
 }  // namespace mdgw

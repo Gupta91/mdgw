@@ -91,7 +91,7 @@ private:
         for (const auto& inst : insts) {
           const auto updates = registry_.resetUpdates(inst);
           const double rate = static_cast<double>(updates) / static_cast<double>(rateIntervalSeconds_);
-          spdlog::info("[metrics] {} updates/sec: {:.2f}", inst, rate);
+          spdlog::debug("[metrics] {} updates/sec: {:.2f}", inst, rate);
         }
         nextRate = now + std::chrono::seconds(rateIntervalSeconds_);
       }
@@ -102,10 +102,10 @@ private:
           auto [totalNs, count] = registry_.resetLatency(inst);
           if (count > 0) {
             const double avgUs = static_cast<double>(totalNs) / static_cast<double>(count) / 1000.0;
-            spdlog::info("[metrics] {} avg tick->book latency over {}s: {:.2f} us (n={})",
+            spdlog::debug("[metrics] {} avg tick->book latency over {}s: {:.2f} us (n={})",
                          inst, latencyIntervalSeconds_, avgUs, count);
           } else {
-            spdlog::info("[metrics] {} avg tick->book latency over {}s: n=0", inst, latencyIntervalSeconds_);
+            spdlog::debug("[metrics] {} avg tick->book latency over {}s: n=0", inst, latencyIntervalSeconds_);
           }
         }
         nextLatency = now + std::chrono::seconds(latencyIntervalSeconds_);
