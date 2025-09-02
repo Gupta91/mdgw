@@ -32,7 +32,7 @@ macOS notes (Homebrew paths):
 ```bash
 # Fresh configure with explicit Homebrew paths so CMake finds Boost/OpenSSL/zlib
 rm -rf build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DCMAKE_PREFIX_PATH="$(brew --prefix);$(brew --prefix boost);$(brew --prefix openssl@3);$(brew --prefix zlib)" \
   -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"
 
